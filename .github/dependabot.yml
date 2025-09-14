@@ -19,7 +19,7 @@ updates:
       - dependency-type: "all"
     ignore:
       - dependency-name: "node"
-        versions: [">22"] # Ignore Node versions above LTS (Node 22)
+        versions: ["<22", ">22"] # Only allow Node 22.x versions
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -54,4 +54,4 @@ updates:
           - "patch"
     ignore:
       - dependency-name: "node"
-        versions: [">22"]
+        versions: ["<22", ">22"] # Only allow Node 22.x versions
