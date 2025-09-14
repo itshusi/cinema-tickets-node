@@ -7,7 +7,7 @@ export default class TicketTypeRequest {
 
   #noOfTickets;
 
-  constructor(type, noOfTickets) {
+  constructor(type: string, noOfTickets: number) {
     if (!this.#Type.includes(type)) {
       throw new TypeError(
         `type must be ${this.#Type.slice(0, -1).join(', ')}, or ${this.#Type.slice(-1)}`
