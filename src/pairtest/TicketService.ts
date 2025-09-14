@@ -1,8 +1,32 @@
 import TicketTypeRequest from './lib/TicketTypeRequest';
 import InvalidPurchaseException from './lib/InvalidPurchaseException';
-import { TicketType, TicketCounts, BUSINESS_RULES } from '../types/TicketTypes';
+import {
+  TicketType,
+  TicketCounts,
+  BUSINESS_RULES,
+  TICKET_PRICES,
+} from '../types/TicketTypes';
+
+interface PaymentService {
+  makePayment(accountId: number, totalAmountToPay: number): void;
+}
+
+interface SeatReservationServiceInterface {
+  reserveSeat(accountId: number, totalSeatsToAllocate: number): void;
+}
 
 export default class TicketService {
+  private readonly ticketPaymentService: PaymentService;
+  private readonly seatReservationService: SeatReservationServiceInterface;
+
+  constructor(
+    ticketPaymentService: PaymentService,
+    seatReservationService: SeatReservationServiceInterface
+  ) {
+    this.ticketPaymentService = ticketPaymentService;
+    this.seatReservationService = seatReservationService;
+  }
+
   /**
    * Should only have private methods other than the one below.
    */
@@ -18,8 +42,11 @@ export default class TicketService {
     const ticketCounts = this.calculateTicketCounts(ticketTypeRequests);
     this.validateBusinessRules(ticketCounts);
 
-    // TODO: Implement payment and seat reservation
-    console.log('Business rules validated. Tickets:', ticketCounts);
+    const totalAmount = this.calculateTotalPaymentAmount(ticketCounts);
+    const totalSeats = this.calculateTotalSeatsToReserve(ticketCounts);
+
+    this.processPayment(accountId, totalAmount);
+    this.reserveSeats(accountId, totalSeats);
   }
 
   private validateAccountId(accountId: number): void {
@@ -90,6 +117,41 @@ export default class TicketService {
       throw new InvalidPurchaseException(
         'Child and Infant tickets cannot be purchased without Adult tickets'
       );
+    }
+  }
+
+  private calculateTotalPaymentAmount(ticketCounts: TicketCounts): number {
+    return (
+      ticketCounts[TicketType.ADULT] * TICKET_PRICES[TicketType.ADULT] +
+      ticketCounts[TicketType.CHILD] * TICKET_PRICES[TicketType.CHILD] +
+      ticketCounts[TicketType.INFANT] * TICKET_PRICES[TicketType.INFANT]
+    );
+  }
+
+  private calculateTotalSeatsToReserve(ticketCounts: TicketCounts): number {
+    // Infants sit on adult laps, so they don't need seats
+    return ticketCounts[TicketType.ADULT] + ticketCounts[TicketType.CHILD];
+  }
+
+  private processPayment(accountId: number, totalAmount: number): void {
+    try {
+      this.ticketPaymentService.makePayment(accountId, totalAmount);
+    } catch (error) {
+      throw new InvalidPurchaseException(
+        `Payment processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  private reserveSeats(accountId: number, totalSeats: number): void {
+    if (totalSeats > 0) {
+      try {
+        this.seatReservationService.reserveSeat(accountId, totalSeats);
+      } catch (error) {
+        throw new InvalidPurchaseException(
+          `Seat reservation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
     }
   }
 }

@@ -24,5 +24,9 @@ export default {
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^TicketPaymentService$':
+      '<rootDir>/src/thirdparty/paymentgateway/TicketPaymentService',
+    '^SeatReservationService$':
+      '<rootDir>/src/thirdparty/seatbooking/SeatReservationService',
   },
 };

@@ -3,6 +3,12 @@
     "target": "ES2024",
     "module": "ESNext",
     "moduleResolution": "Node",
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["src/*"],
+      "TicketPaymentService": ["src/thirdparty/paymentgateway/TicketPaymentService"],
+      "SeatReservationService": ["src/thirdparty/seatbooking/SeatReservationService"]
+    },
     "lib": ["ES2024"],
     "types": ["jest", "node"],
     "strict": true,

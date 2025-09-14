@@ -2,26 +2,17 @@ import TicketService from '../../src/pairtest/TicketService';
 import TicketTypeRequest from '../../src/pairtest/lib/TicketTypeRequest';
 import InvalidPurchaseException from '../../src/pairtest/lib/InvalidPurchaseException';
 
-// Create mock constructors
+// Create mock implementations
 const mockMakePayment = jest.fn();
 const mockReserveSeat = jest.fn();
 
-// Mock the third-party services
-jest.mock('../../src/thirdparty/paymentgateway/TicketPaymentService', () => {
-  return {
-    default: jest.fn().mockImplementation(() => ({
-      makePayment: mockMakePayment,
-    })),
-  };
-});
+const mockTicketPaymentService = {
+  makePayment: mockMakePayment,
+};
 
-jest.mock('../../src/thirdparty/seatbooking/SeatReservationService', () => {
-  return {
-    default: jest.fn().mockImplementation(() => ({
-      reserveSeat: mockReserveSeat,
-    })),
-  };
-});
+const mockSeatReservationService = {
+  reserveSeat: mockReserveSeat,
+};
 
 describe('TicketService', () => {
   let ticketService: TicketService;
@@ -30,8 +21,11 @@ describe('TicketService', () => {
     // Clear all mocks before each test
     jest.clearAllMocks();
 
-    // Create service instance
-    ticketService = new TicketService();
+    // Create service instance with mocked dependencies
+    ticketService = new TicketService(
+      mockTicketPaymentService,
+      mockSeatReservationService
+    );
   });
 
   describe('Account ID validation', () => {
