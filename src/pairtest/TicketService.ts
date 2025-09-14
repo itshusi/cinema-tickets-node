@@ -11,10 +11,17 @@ export default class TicketService {
     ...ticketTypeRequests: TicketTypeRequest[]
   ): void {
     // throws InvalidPurchaseException
-    // Implementation will be added after tests are written
-    if (accountId <= 0) {
-      throw new InvalidPurchaseException('Invalid account ID');
+    this.validateAccountId(accountId);
+
+    // TODO: Implement remaining validation and business logic
+    console.log('Tickets requested:', ticketTypeRequests.length);
+  }
+
+  private validateAccountId(accountId: number): void {
+    if (!Number.isInteger(accountId) || accountId <= 0) {
+      throw new InvalidPurchaseException(
+        'Account ID must be a positive integer'
+      );
     }
-    console.log(ticketTypeRequests);
   }
 }
