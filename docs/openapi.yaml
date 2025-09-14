@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+  title: Cinema Tickets API
+  description: REST API for purchasing cinema tickets, documented for the coding exercise. This API documents the TicketService capabilities; a full HTTP server is not required for the exercise.
+  version: 1.0.0
+  contact:
+    name: DWP Coding Exercise
+servers:
+  - url: http://localhost:3000
+    description: Local development (placeholder)
+
+paths:
+  /tickets/purchase:
+    post:
+      summary: Purchase cinema tickets
+      description: Validates request, enforces business rules, processes payment, and reserves seats.
+      operationId: purchaseTickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketPurchaseRequest'
+            examples:
+              basicPurchase:
+                summary: Adult and child tickets
+                value:
+                  accountId: 12345
+                  tickets:
+                    - type: ADULT
+                      quantity: 2
+                    - type: CHILD
+                      quantity: 1
+      responses:
+        '200':
+          description: Tickets purchased successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      accountId: 12345
+                      totalAmount: 65
+                      totalSeats: 3
+                      tickets:
+                        - type: ADULT
+                          quantity: 2
+                          price: 50
+                        - type: CHILD
+                          quantity: 1
+                          price: 15
+                      timestamp: '2025-09-14T12:00:00.000Z'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidAccount:
+                  value:
+                    success: false
+                    error:
+                      type: VALIDATION_ERROR
+                      code: INVALID_ACCOUNT_ID
+                      message: Invalid account ID: -5. Account ID must be a positive integer greater than 0
+                      timestamp: '2025-09-14T12:00:00.000Z'
+                      details:
+                        providedAccountId: -5
+        '402':
+          description: Payment required (payment failure)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                paymentDeclined:
+                  value:
+                    success: false
+                    error:
+                      type: PAYMENT_FAILURE
+                      code: PAYMENT_DECLINED
+                      message: Payment processing failed: Insufficient funds
+                      timestamp: '2025-09-14T12:00:00.000Z'
+                      details:
+                        requestedAmount: 50
+                        accountId: 12345
+        '409':
+          description: Seat reservation conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                noSeats:
+                  value:
+                    success: false
+                    error:
+                      type: SEAT_RESERVATION_FAILURE
+                      code: NO_SEATS_AVAILABLE
+                      message: Seat reservation failed: No seats available for requested showtime
+                      timestamp: '2025-09-14T12:00:00.000Z'
+                      details:
+                        requestedSeats: 5
+                        availableSeats: 2
+        '422':
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                supervisionRequired:
+                  value:
+                    success: false
+                    error:
+                      type: BUSINESS_RULE_VIOLATION
+                      code: ADULT_SUPERVISION_REQUIRED
+                      message: Child and Infant tickets require at least one Adult ticket
+                      timestamp: '2025-09-14T12:00:00.000Z'
+                      details:
+                        childTickets: 2
+                        infantTickets: 1
+                        adultTickets: 0
+        '503':
+          description: Service unavailable (external dependency outage)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                paymentServiceDown:
+                  value:
+                    success: false
+                    error:
+                      type: SERVICE_UNAVAILABLE
+                      code: PAYMENT_SERVICE_DOWN
+                      message: Payment service is temporarily unavailable
+                      timestamp: '2025-09-14T12:00:00.000Z'
+                      details:
+                        retryAfterSeconds: 60
+
+components:
+  schemas:
+    TicketType:
+      type: string
+      enum: [INFANT, CHILD, ADULT]
+    TicketItem:
+      type: object
+      required: [type, quantity]
+      properties:
+        type:
+          $ref: '#/components/schemas/TicketType'
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+    TicketPurchaseRequest:
+      type: object
+      required: [accountId, tickets]
+      properties:
+        accountId:
+          type: integer
+          minimum: 1
+          example: 12345
+        tickets:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            $ref: '#/components/schemas/TicketItem'
+    SuccessResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [accountId, totalAmount, totalSeats, tickets, timestamp]
+          properties:
+            accountId:
+              type: integer
+            totalAmount:
+              type: integer
+              description: Total charge in pounds (as per examples)
+            totalSeats:
+              type: integer
+            tickets:
+              type: array
+              items:
+                type: object
+                required: [type, quantity, price]
+                properties:
+                  type:
+                    $ref: '#/components/schemas/TicketType'
+                  quantity:
+                    type: integer
+                  price:
+                    type: integer
+            timestamp:
+              type: string
+              format: date-time
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: object
+          required: [type, code, message, timestamp]
+          properties:
+            type:
+              type: string
+              enum:
+                [
+                  VALIDATION_ERROR,
+                  BUSINESS_RULE_VIOLATION,
+                  PAYMENT_FAILURE,
+                  SEAT_RESERVATION_FAILURE,
+                  SERVICE_UNAVAILABLE,
+                ]
+            code:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            details:
+              type: object
+              additionalProperties: true
