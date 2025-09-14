@@ -345,6 +345,96 @@ describe('TicketService', () => {
     });
   });
 
+  describe('Error handling and resilience', () => {
+    beforeEach(() => {
+      // Reset mocks to their default behavior for error handling tests
+      mockMakePayment.mockReset();
+      mockReserveSeat.mockReset();
+    });
+
+    test('should handle payment service failures gracefully', () => {
+      const adultTickets = new TicketTypeRequest('ADULT', 1);
+
+      // Mock payment service to throw an error
+      mockMakePayment.mockImplementation(() => {
+        throw new Error('Payment gateway unavailable');
+      });
+
+      expect(() => {
+        ticketService.purchaseTickets(1, adultTickets);
+      }).toThrow(InvalidPurchaseException);
+
+      expect(() => {
+        ticketService.purchaseTickets(1, adultTickets);
+      }).toThrow('Payment processing failed: Payment gateway unavailable');
+    });
+
+    test('should handle seat reservation service failures gracefully', () => {
+      const adultTickets = new TicketTypeRequest('ADULT', 1);
+
+      // Ensure payment succeeds but seat reservation fails
+      mockMakePayment.mockImplementation(() => {});
+      mockReserveSeat.mockImplementation(() => {
+        throw new Error('Seat booking system down');
+      });
+
+      expect(() => {
+        ticketService.purchaseTickets(1, adultTickets);
+      }).toThrow(InvalidPurchaseException);
+
+      expect(() => {
+        ticketService.purchaseTickets(1, adultTickets);
+      }).toThrow('Seat reservation failed: Seat booking system down');
+    });
+
+    test('should handle unknown error types in payment service', () => {
+      const adultTickets = new TicketTypeRequest('ADULT', 1);
+
+      // Mock payment service to throw an unknown error type
+      mockMakePayment.mockImplementation(() => {
+        const unknownError: unknown = 'String error';
+        throw unknownError;
+      });
+
+      expect(() => {
+        ticketService.purchaseTickets(1, adultTickets);
+      }).toThrow('Payment processing failed: Unknown error');
+    });
+
+    test('should handle unknown error types in seat reservation service', () => {
+      const adultTickets = new TicketTypeRequest('ADULT', 1);
+
+      // Ensure payment succeeds but seat reservation throws unknown error
+      mockMakePayment.mockImplementation(() => {});
+      mockReserveSeat.mockImplementation(() => {
+        const unknownError: unknown = { message: 'object error' };
+        throw unknownError;
+      });
+
+      expect(() => {
+        ticketService.purchaseTickets(1, adultTickets);
+      }).toThrow('Seat reservation failed: Unknown error');
+    });
+
+    test('should not call seat reservation when no seats are needed', () => {
+      // Reset mocks to check specific calls
+      jest.clearAllMocks();
+
+      // This is technically impossible with current business rules since infants need adults
+      // But testing the conditional logic in reserveSeats method
+      const adultTickets = new TicketTypeRequest('ADULT', 0);
+      const infantTickets = new TicketTypeRequest('INFANT', 1);
+
+      // This should fail validation before reaching seat reservation
+      expect(() => {
+        ticketService.purchaseTickets(1, adultTickets, infantTickets);
+      }).toThrow(InvalidPurchaseException);
+
+      // Seat reservation should not be called due to validation failure
+      expect(mockReserveSeat).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Edge cases', () => {
     test('should handle single ticket purchase', () => {
       const adultTicket = new TicketTypeRequest('ADULT', 1);
