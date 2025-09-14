@@ -3,14 +3,14 @@
  */
 
 export default class TicketTypeRequest {
-  #type;
+  readonly #type;
 
-  #noOfTickets;
+  readonly #noOfTickets;
 
   constructor(type: string, noOfTickets: number) {
     if (!this.#Type.includes(type)) {
       throw new TypeError(
-        `type must be ${this.#Type.slice(0, -1).join(', ')}, or ${this.#Type.slice(-1)}`
+        `type must be ${this.#Type.slice(0, -1).join(', ')}, or ${this.#Type.slice(-1)[0]}`
       );
     }
 
@@ -22,13 +22,13 @@ export default class TicketTypeRequest {
     this.#noOfTickets = noOfTickets;
   }
 
-  getNoOfTickets() {
+  getNoOfTickets(): number {
     return this.#noOfTickets;
   }
 
-  getTicketType() {
+  getTicketType(): string {
     return this.#type;
   }
 
-  #Type = ['ADULT', 'CHILD', 'INFANT'];
+  readonly #Type = ['ADULT', 'CHILD', 'INFANT'];
 }
