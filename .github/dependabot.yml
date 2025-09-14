@@ -1,0 +1,57 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
+    groups:
+      major-updates:
+        update-types:
+          - "major"
+      minor-updates:
+        update-types:
+          - "minor"
+      patch-updates:
+        update-types:
+          - "patch"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-name: "node"
+        versions: [">22"] # Ignore Node versions above LTS (Node 22)
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
+    groups:
+      major-updates:
+        update-types:
+          - "major"
+      minor-updates:
+        update-types:
+          - "minor"
+      patch-updates:
+        update-types:
+          - "patch"
+
+  - package-ecosystem: docker
+    directory: "/docker"
+    schedule:
+      interval: daily
+    target-branch: "main"
+    groups:
+      major-updates:
+        update-types:
+          - "major"
+      minor-updates:
+        update-types:
+          - "minor"
+      patch-updates:
+        update-types:
+          - "patch"
+    ignore:
+      - dependency-name: "node"
+        versions: [">22"]
