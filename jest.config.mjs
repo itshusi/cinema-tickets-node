@@ -9,11 +9,7 @@ export default {
     },
   },
   testMatch: ['**/test/**/*.test.ts'],
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/thirdparty/**/*',
-  ],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
     global: {
