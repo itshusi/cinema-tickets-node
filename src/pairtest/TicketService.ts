@@ -6,77 +6,80 @@ import {
   BUSINESS_RULES,
   TICKET_PRICES,
 } from '../types/TicketTypes';
+import {
+  TicketPurchaseService,
+  PaymentProcessingService,
+  SeatAllocationService,
+} from './interfaces/TicketServiceApi';
 
-interface PaymentService {
-  makePayment(accountId: number, totalAmountToPay: number): void;
-}
-
-interface SeatReservationServiceInterface {
-  reserveSeat(accountId: number, totalSeatsToAllocate: number): void;
-}
-
-export default class TicketService {
-  private readonly ticketPaymentService: PaymentService;
-  private readonly seatReservationService: SeatReservationServiceInterface;
+export default class TicketService implements TicketPurchaseService {
+  private readonly paymentProcessor: PaymentProcessingService;
+  private readonly seatManager: SeatAllocationService;
 
   constructor(
-    ticketPaymentService: PaymentService,
-    seatReservationService: SeatReservationServiceInterface
+    paymentProcessor: PaymentProcessingService,
+    seatManager: SeatAllocationService
   ) {
-    this.ticketPaymentService = ticketPaymentService;
-    this.seatReservationService = seatReservationService;
+    this.paymentProcessor = paymentProcessor;
+    this.seatManager = seatManager;
   }
-
-  /**
-   * Should only have private methods other than the one below.
-   */
 
   purchaseTickets(
     accountId: number,
-    ...ticketTypeRequests: TicketTypeRequest[]
+    ...ticketRequests: TicketTypeRequest[]
   ): void {
-    // throws InvalidPurchaseException
-    this.validateAccountId(accountId);
-    this.validateTicketRequests(ticketTypeRequests);
+    this.ensureValidAccountId(accountId);
+    this.ensureValidTicketRequests(ticketRequests);
 
-    const ticketCounts = this.calculateTicketCounts(ticketTypeRequests);
-    this.validateBusinessRules(ticketCounts);
+    const ticketCounts = this.aggregateTicketQuantitiesByType(ticketRequests);
+    this.enforceBusinessRules(ticketCounts);
 
-    const totalAmount = this.calculateTotalPaymentAmount(ticketCounts);
-    const totalSeats = this.calculateTotalSeatsToReserve(ticketCounts);
+    const paymentAmount = this.calculateTotalCost(ticketCounts);
+    const requiredSeats = this.calculateSeatsNeeded(ticketCounts);
 
-    this.processPayment(accountId, totalAmount);
-    this.reserveSeats(accountId, totalSeats);
+    this.executePaymentTransaction(accountId, paymentAmount);
+    this.executeSeatReservation(accountId, requiredSeats);
   }
 
-  private validateAccountId(accountId: number): void {
+  private ensureValidAccountId(accountId: number): void {
     if (!Number.isInteger(accountId) || accountId <= 0) {
       throw new InvalidPurchaseException(
-        'Account ID must be a positive integer'
+        `Invalid account ID: ${accountId}. Account ID must be a positive integer greater than 0`
       );
     }
   }
 
-  private validateTicketRequests(
-    ticketTypeRequests: TicketTypeRequest[]
-  ): void {
-    if (!ticketTypeRequests || ticketTypeRequests.length === 0) {
+  private ensureValidTicketRequests(ticketRequests: TicketTypeRequest[]): void {
+    if (!ticketRequests || ticketRequests.length === 0) {
       throw new InvalidPurchaseException(
         'At least one ticket must be requested'
       );
     }
 
-    for (const request of ticketTypeRequests) {
-      if (!request || request.getNoOfTickets() <= 0) {
-        throw new InvalidPurchaseException(
-          'All ticket requests must have a positive quantity'
-        );
-      }
-    }
+    ticketRequests.forEach(this.ensureSingleTicketRequestIsValid);
   }
 
-  private calculateTicketCounts(
-    ticketTypeRequests: TicketTypeRequest[]
+  private readonly ensureSingleTicketRequestIsValid = (
+    request: TicketTypeRequest
+  ): void => {
+    if (!request) {
+      throw new InvalidPurchaseException(
+        'Invalid ticket request: null or undefined ticket request provided'
+      );
+    }
+
+    const quantity = request.getNoOfTickets();
+    const ticketType = request.getTicketType();
+
+    if (quantity <= 0) {
+      throw new InvalidPurchaseException(
+        `Invalid quantity for ${ticketType} tickets: ${quantity}. Quantity must be greater than 0`
+      );
+    }
+  };
+
+  private aggregateTicketQuantitiesByType(
+    ticketRequests: TicketTypeRequest[]
   ): TicketCounts {
     const counts: TicketCounts = {
       [TicketType.ADULT]: 0,
@@ -84,7 +87,7 @@ export default class TicketService {
       [TicketType.INFANT]: 0,
     };
 
-    for (const request of ticketTypeRequests) {
+    for (const request of ticketRequests) {
       const ticketType = request.getTicketType() as TicketType;
       const quantity = request.getNoOfTickets();
       counts[ticketType] += quantity;
@@ -93,34 +96,65 @@ export default class TicketService {
     return counts;
   }
 
-  private validateBusinessRules(ticketCounts: TicketCounts): void {
-    const totalTickets =
-      ticketCounts[TicketType.ADULT] +
-      ticketCounts[TicketType.CHILD] +
-      ticketCounts[TicketType.INFANT];
+  private enforceBusinessRules(ticketCounts: TicketCounts): void {
+    this.ensureTicketLimitNotExceeded(ticketCounts);
+    this.ensureAtLeastOneTicketPurchased(ticketCounts);
+    this.ensureAdultSupervisionRequirement(ticketCounts);
+  }
+
+  private ensureTicketLimitNotExceeded(ticketCounts: TicketCounts): void {
+    const totalTickets = this.calculateTotalTicketCount(ticketCounts);
 
     if (totalTickets > BUSINESS_RULES.MAX_TICKETS_PER_PURCHASE) {
       throw new InvalidPurchaseException(
-        'Cannot purchase more than 25 tickets at a time'
-      );
-    }
-
-    if (totalTickets === 0) {
-      throw new InvalidPurchaseException('Must purchase at least one ticket');
-    }
-
-    if (
-      (ticketCounts[TicketType.CHILD] > 0 ||
-        ticketCounts[TicketType.INFANT] > 0) &&
-      ticketCounts[TicketType.ADULT] === 0
-    ) {
-      throw new InvalidPurchaseException(
-        'Child and Infant tickets cannot be purchased without Adult tickets'
+        `Cannot purchase more than ${BUSINESS_RULES.MAX_TICKETS_PER_PURCHASE} tickets at a time. Requested: ${totalTickets} tickets`
       );
     }
   }
 
-  private calculateTotalPaymentAmount(ticketCounts: TicketCounts): number {
+  private ensureAtLeastOneTicketPurchased(ticketCounts: TicketCounts): void {
+    const totalTickets = this.calculateTotalTicketCount(ticketCounts);
+
+    if (totalTickets === 0) {
+      throw new InvalidPurchaseException('Must purchase at least one ticket');
+    }
+  }
+
+  private ensureAdultSupervisionRequirement(ticketCounts: TicketCounts): void {
+    const hasChildrenOrInfants =
+      ticketCounts[TicketType.CHILD] > 0 || ticketCounts[TicketType.INFANT] > 0;
+    const hasAdults = ticketCounts[TicketType.ADULT] > 0;
+
+    if (hasChildrenOrInfants && !hasAdults) {
+      const errorDetails = this.buildSupervisionErrorDetails(ticketCounts);
+      throw new InvalidPurchaseException(
+        `Child and Infant tickets require at least one Adult ticket. Attempted to purchase: ${errorDetails} without any Adult tickets`
+      );
+    }
+  }
+
+  private buildSupervisionErrorDetails(ticketCounts: TicketCounts): string {
+    const details = [];
+
+    if (ticketCounts[TicketType.CHILD] > 0) {
+      details.push(`${ticketCounts[TicketType.CHILD]} Child ticket(s)`);
+    }
+    if (ticketCounts[TicketType.INFANT] > 0) {
+      details.push(`${ticketCounts[TicketType.INFANT]} Infant ticket(s)`);
+    }
+
+    return details.join(' and ');
+  }
+
+  private calculateTotalTicketCount(ticketCounts: TicketCounts): number {
+    return (
+      ticketCounts[TicketType.ADULT] +
+      ticketCounts[TicketType.CHILD] +
+      ticketCounts[TicketType.INFANT]
+    );
+  }
+
+  private calculateTotalCost(ticketCounts: TicketCounts): number {
     return (
       ticketCounts[TicketType.ADULT] * TICKET_PRICES[TicketType.ADULT] +
       ticketCounts[TicketType.CHILD] * TICKET_PRICES[TicketType.CHILD] +
@@ -128,14 +162,13 @@ export default class TicketService {
     );
   }
 
-  private calculateTotalSeatsToReserve(ticketCounts: TicketCounts): number {
-    // Infants sit on adult laps, so they don't need seats
+  private calculateSeatsNeeded(ticketCounts: TicketCounts): number {
     return ticketCounts[TicketType.ADULT] + ticketCounts[TicketType.CHILD];
   }
 
-  private processPayment(accountId: number, totalAmount: number): void {
+  private executePaymentTransaction(accountId: number, amount: number): void {
     try {
-      this.ticketPaymentService.makePayment(accountId, totalAmount);
+      this.paymentProcessor.makePayment(accountId, amount);
     } catch (error) {
       throw new InvalidPurchaseException(
         `Payment processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -143,10 +176,10 @@ export default class TicketService {
     }
   }
 
-  private reserveSeats(accountId: number, totalSeats: number): void {
-    if (totalSeats > 0) {
+  private executeSeatReservation(accountId: number, seatCount: number): void {
+    if (seatCount > 0) {
       try {
-        this.seatReservationService.reserveSeat(accountId, totalSeats);
+        this.seatManager.reserveSeat(accountId, seatCount);
       } catch (error) {
         throw new InvalidPurchaseException(
           `Seat reservation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
