@@ -1,4 +1,15 @@
 import type TicketTypeRequest from "../lib/TicketTypeRequest";
+import type { TicketCounts } from "../../types/TicketTypes";
+
+/**
+ * Purchase result containing transaction details
+ */
+export interface PurchaseResult {
+  accountId: number;
+  totalAmount: number;
+  totalSeats: number;
+  ticketCounts: TicketCounts;
+}
 
 /**
  * API contract for cinema ticket purchasing service
@@ -58,7 +69,7 @@ export interface TicketPurchaseService {
    * ); // throws InvalidPurchaseException
    * ```
    */
-  purchaseTickets(accountId: number, ...ticketRequests: TicketTypeRequest[]): void | Promise<void>;
+  purchaseTickets(accountId: number, ...ticketRequests: TicketTypeRequest[]): void | Promise<void> | Promise<PurchaseResult>;
 }
 
 /**

@@ -12,7 +12,13 @@ export default {
     ],
   },
   testMatch: ["**/test/**/*.test.ts"],
-  collectCoverageFrom: ["src/**/InvalidPurchaseException.ts", "src/**/TicketService.ts", "src/**/TicketTypeRequest.ts", "!src/**/*.d.ts"],
+  collectCoverageFrom: [
+    "src/**/InvalidPurchaseException.ts",
+    "src/**/TicketService.ts",
+    "src/**/TicketTypeRequest.ts",
+    "src/**/TicketController.ts",
+    "!src/**/*.d.ts",
+  ],
   coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
     global: {

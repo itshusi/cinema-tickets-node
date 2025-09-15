@@ -1,7 +1,7 @@
 import TicketTypeRequest from "./lib/TicketTypeRequest.js";
 import InvalidPurchaseException from "./lib/InvalidPurchaseException.js";
 import { TicketType, TicketCounts, BUSINESS_RULES, TICKET_PRICES } from "../types/TicketTypes.js";
-import { TicketPurchaseService, PaymentProcessingService, SeatAllocationService } from "./interfaces/TicketServiceApi.js";
+import { TicketPurchaseService, PaymentProcessingService, SeatAllocationService, PurchaseResult } from "./interfaces/TicketServiceApi.js";
 
 export default class TicketService implements TicketPurchaseService {
   private readonly paymentProcessor: PaymentProcessingService;
@@ -12,7 +12,7 @@ export default class TicketService implements TicketPurchaseService {
     this.seatManager = seatManager;
   }
 
-  async purchaseTickets(accountId: number, ...ticketRequests: TicketTypeRequest[]): Promise<void> {
+  async purchaseTickets(accountId: number, ...ticketRequests: TicketTypeRequest[]): Promise<PurchaseResult> {
     this.ensureValidAccountId(accountId);
     this.ensureValidTicketRequests(ticketRequests);
 
@@ -24,6 +24,14 @@ export default class TicketService implements TicketPurchaseService {
 
     await this.executePaymentTransaction(accountId, paymentAmount);
     await this.executeSeatReservation(accountId, requiredSeats);
+
+    // Return the purchase details
+    return {
+      accountId,
+      totalAmount: paymentAmount,
+      totalSeats: requiredSeats,
+      ticketCounts,
+    };
   }
 
   private ensureValidAccountId(accountId: number): void {

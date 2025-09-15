@@ -31,6 +31,17 @@ paths:
                       quantity: 2
                     - type: CHILD
                       quantity: 1
+              familyPurchase:
+                summary: Family with infant (free ticket, no seat)
+                value:
+                  accountId: 12345
+                  tickets:
+                    - type: ADULT
+                      quantity: 2
+                    - type: CHILD
+                      quantity: 1
+                    - type: INFANT
+                      quantity: 1
       responses:
         "200":
           description: Tickets purchased successfully
@@ -40,6 +51,7 @@ paths:
                 $ref: "#/components/schemas/SuccessResponse"
               examples:
                 success:
+                  summary: Adult and child purchase
                   value:
                     success: true
                     data:
@@ -53,6 +65,25 @@ paths:
                         - type: CHILD
                           quantity: 1
                           price: 15
+                      timestamp: "2025-09-14T12:00:00.000Z"
+                familySuccess:
+                  summary: Family with infant (infant free, no seat)
+                  value:
+                    success: true
+                    data:
+                      accountId: 12345
+                      totalAmount: 65
+                      totalSeats: 3
+                      tickets:
+                        - type: ADULT
+                          quantity: 2
+                          price: 50
+                        - type: CHILD
+                          quantity: 1
+                          price: 15
+                        - type: INFANT
+                          quantity: 1
+                          price: 0
                       timestamp: "2025-09-14T12:00:00.000Z"
         "400":
           description: Validation error
