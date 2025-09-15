@@ -1,13 +1,10 @@
-// Type definitions for third-party JavaScript services
-// These services cannot be modified per requirements
-
-declare module 'TicketPaymentService' {
+declare module "*/thirdparty/paymentgateway/TicketPaymentService.js" {
   export default class TicketPaymentService {
     makePayment(accountId: number, totalAmountToPay: number): void;
   }
 }
 
-declare module 'SeatReservationService' {
+declare module "*/thirdparty/seatbooking/SeatReservationService.js" {
   export default class SeatReservationService {
     reserveSeat(accountId: number, totalSeatsToAllocate: number): void;
   }

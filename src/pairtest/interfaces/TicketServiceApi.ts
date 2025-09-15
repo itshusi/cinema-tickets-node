@@ -1,4 +1,4 @@
-import type TicketTypeRequest from '../lib/TicketTypeRequest';
+import type TicketTypeRequest from "../lib/TicketTypeRequest";
 
 /**
  * API contract for cinema ticket purchasing service
@@ -44,7 +44,7 @@ export interface TicketPurchaseService {
    * @example
    * ```typescript
    * // Valid purchase
-   * service.purchaseTickets(
+   * await service.purchaseTickets(
    *   12345,
    *   new TicketTypeRequest('ADULT', 2),
    *   new TicketTypeRequest('CHILD', 1),
@@ -52,16 +52,13 @@ export interface TicketPurchaseService {
    * );
    *
    * // Invalid - no adult supervision
-   * service.purchaseTickets(
+   * await service.purchaseTickets(
    *   12345,
    *   new TicketTypeRequest('CHILD', 2)
    * ); // throws InvalidPurchaseException
    * ```
    */
-  purchaseTickets(
-    accountId: number,
-    ...ticketRequests: TicketTypeRequest[]
-  ): void;
+  purchaseTickets(accountId: number, ...ticketRequests: TicketTypeRequest[]): void | Promise<void>;
 }
 
 /**
@@ -79,7 +76,7 @@ export interface PaymentProcessingService {
    *
    * @throws When payment processing fails
    */
-  makePayment(accountId: number, totalAmountToPay: number): void;
+  makePayment(accountId: number, totalAmountToPay: number): void | Promise<void>;
 }
 
 /**
@@ -100,7 +97,7 @@ export interface SeatAllocationService {
    *
    * @throws When seat reservation fails
    */
-  reserveSeat(accountId: number, totalSeatsToAllocate: number): void;
+  reserveSeat(accountId: number, totalSeatsToAllocate: number): void | Promise<void>;
 }
 
 /**

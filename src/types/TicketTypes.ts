@@ -2,9 +2,9 @@
  * Supported ticket types for cinema booking system
  */
 export enum TicketType {
-  ADULT = 'ADULT',
-  CHILD = 'CHILD',
-  INFANT = 'INFANT',
+  ADULT = "ADULT",
+  CHILD = "CHILD",
+  INFANT = "INFANT",
 }
 
 /**
