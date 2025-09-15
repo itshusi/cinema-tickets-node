@@ -1,0 +1,51 @@
+services:
+  # Main application service
+  cinema-tickets:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cinema-tickets-app
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '-e', 'fetch("http://127.0.0.1:3000/health").then(r=>r.ok?r.json():Promise.reject()).then(j=>{if(j&&j.status==="OK"){process.exit(0)}else{process.exit(1)}}).catch(()=>process.exit(1))']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development service with volume mounting for hot reload
+  cinema-tickets-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: cinema-tickets-dev
+    ports:
+      - '3001:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    profiles:
+      - dev
+
+  # Swagger UI for API documentation
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: cinema-tickets-swagger
+    ports:
+      - '8080:8080'
+    environment:
+      - SWAGGER_JSON_URL=http://localhost:3000/api-docs/openapi.yaml
+    profiles:
+      - docs
+
+networks:
+  default:
+    name: cinema-tickets-network

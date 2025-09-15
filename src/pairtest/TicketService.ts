@@ -1,33 +1,18 @@
-import TicketTypeRequest from './lib/TicketTypeRequest';
-import InvalidPurchaseException from './lib/InvalidPurchaseException';
-import {
-  TicketType,
-  TicketCounts,
-  BUSINESS_RULES,
-  TICKET_PRICES,
-} from '../types/TicketTypes';
-import {
-  TicketPurchaseService,
-  PaymentProcessingService,
-  SeatAllocationService,
-} from './interfaces/TicketServiceApi';
+import TicketTypeRequest from "./lib/TicketTypeRequest.js";
+import InvalidPurchaseException from "./lib/InvalidPurchaseException.js";
+import { TicketType, TicketCounts, BUSINESS_RULES, TICKET_PRICES } from "../types/TicketTypes.js";
+import { TicketPurchaseService, PaymentProcessingService, SeatAllocationService } from "./interfaces/TicketServiceApi.js";
 
 export default class TicketService implements TicketPurchaseService {
   private readonly paymentProcessor: PaymentProcessingService;
   private readonly seatManager: SeatAllocationService;
 
-  constructor(
-    paymentProcessor: PaymentProcessingService,
-    seatManager: SeatAllocationService
-  ) {
+  constructor(paymentProcessor: PaymentProcessingService, seatManager: SeatAllocationService) {
     this.paymentProcessor = paymentProcessor;
     this.seatManager = seatManager;
   }
 
-  purchaseTickets(
-    accountId: number,
-    ...ticketRequests: TicketTypeRequest[]
-  ): void {
+  async purchaseTickets(accountId: number, ...ticketRequests: TicketTypeRequest[]): Promise<void> {
     this.ensureValidAccountId(accountId);
     this.ensureValidTicketRequests(ticketRequests);
 
@@ -37,50 +22,38 @@ export default class TicketService implements TicketPurchaseService {
     const paymentAmount = this.calculateTotalCost(ticketCounts);
     const requiredSeats = this.calculateSeatsNeeded(ticketCounts);
 
-    this.executePaymentTransaction(accountId, paymentAmount);
-    this.executeSeatReservation(accountId, requiredSeats);
+    await this.executePaymentTransaction(accountId, paymentAmount);
+    await this.executeSeatReservation(accountId, requiredSeats);
   }
 
   private ensureValidAccountId(accountId: number): void {
     if (!Number.isInteger(accountId) || accountId <= 0) {
-      throw new InvalidPurchaseException(
-        `Invalid account ID: ${accountId}. Account ID must be a positive integer greater than 0`
-      );
+      throw new InvalidPurchaseException(`Invalid account ID: ${accountId}. Account ID must be a positive integer greater than 0`);
     }
   }
 
   private ensureValidTicketRequests(ticketRequests: TicketTypeRequest[]): void {
     if (!ticketRequests || ticketRequests.length === 0) {
-      throw new InvalidPurchaseException(
-        'At least one ticket must be requested'
-      );
+      throw new InvalidPurchaseException("At least one ticket must be requested");
     }
 
     ticketRequests.forEach(this.ensureSingleTicketRequestIsValid);
   }
 
-  private readonly ensureSingleTicketRequestIsValid = (
-    request: TicketTypeRequest
-  ): void => {
+  private readonly ensureSingleTicketRequestIsValid = (request: TicketTypeRequest): void => {
     if (!request) {
-      throw new InvalidPurchaseException(
-        'Invalid ticket request: null or undefined ticket request provided'
-      );
+      throw new InvalidPurchaseException("Invalid ticket request: null or undefined ticket request provided");
     }
 
     const quantity = request.getNoOfTickets();
     const ticketType = request.getTicketType();
 
     if (quantity <= 0) {
-      throw new InvalidPurchaseException(
-        `Invalid quantity for ${ticketType} tickets: ${quantity}. Quantity must be greater than 0`
-      );
+      throw new InvalidPurchaseException(`Invalid quantity for ${ticketType} tickets: ${quantity}. Quantity must be greater than 0`);
     }
   };
 
-  private aggregateTicketQuantitiesByType(
-    ticketRequests: TicketTypeRequest[]
-  ): TicketCounts {
+  private aggregateTicketQuantitiesByType(ticketRequests: TicketTypeRequest[]): TicketCounts {
     const counts: TicketCounts = {
       [TicketType.ADULT]: 0,
       [TicketType.CHILD]: 0,
@@ -116,13 +89,12 @@ export default class TicketService implements TicketPurchaseService {
     const totalTickets = this.calculateTotalTicketCount(ticketCounts);
 
     if (totalTickets === 0) {
-      throw new InvalidPurchaseException('Must purchase at least one ticket');
+      throw new InvalidPurchaseException("Must purchase at least one ticket");
     }
   }
 
   private ensureAdultSupervisionRequirement(ticketCounts: TicketCounts): void {
-    const hasChildrenOrInfants =
-      ticketCounts[TicketType.CHILD] > 0 || ticketCounts[TicketType.INFANT] > 0;
+    const hasChildrenOrInfants = ticketCounts[TicketType.CHILD] > 0 || ticketCounts[TicketType.INFANT] > 0;
     const hasAdults = ticketCounts[TicketType.ADULT] > 0;
 
     if (hasChildrenOrInfants && !hasAdults) {
@@ -143,15 +115,11 @@ export default class TicketService implements TicketPurchaseService {
       details.push(`${ticketCounts[TicketType.INFANT]} Infant ticket(s)`);
     }
 
-    return details.join(' and ');
+    return details.join(" and ");
   }
 
   private calculateTotalTicketCount(ticketCounts: TicketCounts): number {
-    return (
-      ticketCounts[TicketType.ADULT] +
-      ticketCounts[TicketType.CHILD] +
-      ticketCounts[TicketType.INFANT]
-    );
+    return ticketCounts[TicketType.ADULT] + ticketCounts[TicketType.CHILD] + ticketCounts[TicketType.INFANT];
   }
 
   private calculateTotalCost(ticketCounts: TicketCounts): number {
@@ -166,24 +134,20 @@ export default class TicketService implements TicketPurchaseService {
     return ticketCounts[TicketType.ADULT] + ticketCounts[TicketType.CHILD];
   }
 
-  private executePaymentTransaction(accountId: number, amount: number): void {
+  private async executePaymentTransaction(accountId: number, amount: number): Promise<void> {
     try {
-      this.paymentProcessor.makePayment(accountId, amount);
+      await this.paymentProcessor.makePayment(accountId, amount);
     } catch (error) {
-      throw new InvalidPurchaseException(
-        `Payment processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      throw new InvalidPurchaseException(`Payment processing failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 
-  private executeSeatReservation(accountId: number, seatCount: number): void {
+  private async executeSeatReservation(accountId: number, seatCount: number): Promise<void> {
     if (seatCount > 0) {
       try {
-        this.seatManager.reserveSeat(accountId, seatCount);
+        await this.seatManager.reserveSeat(accountId, seatCount);
       } catch (error) {
-        throw new InvalidPurchaseException(
-          `Seat reservation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
+        throw new InvalidPurchaseException(`Seat reservation failed: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
     }
   }
