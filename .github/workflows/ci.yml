@@ -105,24 +105,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install Redoc CLI
-        run: npm install -g redoc-cli
+      - name: Install Redocly CLI
+        run: npm install -g @redocly/cli
 
       - name: Bundle OpenAPI spec
-        run: redoc-cli bundle docs/openapi.yaml
-
-      - name: Move bundled HTML to docs/index.html
-        run: mv redoc-static.html docs/index.html
+        run: npx @redocly/cli build-docs docs/openapi.yaml --output docs/index.html
 
       - name: Commit and push docs
         run: |
