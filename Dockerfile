@@ -16,9 +16,8 @@ WORKDIR /app
 COPY --from=builder /app/package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
-# Copy built application and docs
+# Copy built application
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/README.md ./README.md
 
 USER node
 
