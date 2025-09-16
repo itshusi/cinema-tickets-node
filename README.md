@@ -2,12 +2,36 @@
 
 A TypeScript implementation of the DWP cinema ticket booking service exercise.
 
+## Table of Contents
+
+- [Exercise Constraints Maintained](#exercise-constraints-maintained)
+- [Business Rules (Exercise Requirements)](#business-rules-exercise-requirements)
+- [Overview](#overview)
+- [API Endpoints](#api-endpoints)
+- [API Documentation](#api-documentation)
+- [Quick Start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [Installation & Setup](#installation--setup)
+  - [Docker Quick Start (Recommended)](#docker-quick-start-recommended)
+  - [Available NPM Commands](#available-npm-commands)
+  - [Development Workflow](#development-workflow)
+- [Project Structure](#project-structure)
+- [Usage Example](#usage-example)
+- [Testing](#testing)
+- [Implementation Features](#implementation-features)
+- [Architecture](#architecture)
+- [Business Logic Flow](#business-logic-flow)
+- [Error Handling](#error-handling)
+- [Docker & Deployment](#docker--deployment)
+- [Build & Deployment](#build--deployment)
+- [Code Quality Metrics](#code-quality-metrics)
+
 ### Exercise Constraints Maintained
 
-- ✅ **Core TicketService logic** - Original business rules and validation intact
-- ✅ **Third-party packages** - NOT modified (thirdparty.\* untouched)
-- ✅ **TicketTypeRequest** - Immutable object implementation maintained
-- ✅ **External services** - Used as-is with proper integration
+- **Core TicketService logic** - Original business rules and validation intact
+- **Third-party packages** - NOT modified (thirdparty.\* untouched)
+- **TicketTypeRequest** - Immutable object implementation maintained
+- **External services** - Used as-is with proper integration
 
 **Note**: This implementation extends beyond the basic exercise requirements by adding a comprehensive REST API layer, enhanced interfaces for better type safety, and production-ready features while maintaining all core business logic.
 
@@ -49,24 +73,6 @@ This application provides a robust ticket booking service that:
 - **GET** `/` - API information and available endpoints
 - **GET** `/api-docs` - Interactive Swagger/OpenAPI documentation
 
-### Example API Usage
-
-```bash
-# Health check
-curl http://localhost:3000/health
-
-# Purchase tickets (IPv6 recommended for local development)
-curl -6 -X POST http://localhost:3000/tickets/purchase \
-  -H "Content-Type: application/json" \
-  -d '{
-    "accountId": 1,
-    "tickets": [
-      {"type": "ADULT", "quantity": 2},
-      {"type": "CHILD", "quantity": 1}
-    ]
-  }'
-```
-
 ### API Response Examples
 
 **Success Response (200 OK):**
@@ -107,7 +113,8 @@ curl -6 -X POST http://localhost:3000/tickets/purchase \
 
 ## API Documentation
 
-The API includes comprehensive OpenAPI/Swagger documentation:
+The API includes comprehensive OpenAPI/Swagger documentation: 
+[Published API Docs](http://huseyinarpalikli.com/cinema-tickets-node)
 
 - **Interactive Docs**: <http://localhost:3000/api-docs> (when server is running)
 - **OpenAPI Spec**: Available at `docs/openapi.yaml`
@@ -119,25 +126,25 @@ The API includes comprehensive OpenAPI/Swagger documentation:
 
 ```bash
 # Health check
-curl -6 http://localhost:3000/health
+curl http://localhost:3000/health
 
 # Valid purchase
-curl -6 -X POST http://localhost:3000/tickets/purchase \
+curl -X POST http://localhost:3000/tickets/purchase \
   -H "Content-Type: application/json" \
   -d '{"accountId":1,"tickets":[{"type":"ADULT","quantity":2},{"type":"CHILD","quantity":1}]}'
 
 # Invalid account ID
-curl -6 -X POST http://localhost:3000/tickets/purchase \
+curl -X POST http://localhost:3000/tickets/purchase \
   -H "Content-Type: application/json" \
   -d '{"accountId":0,"tickets":[{"type":"ADULT","quantity":1}]}'
 
 # Child without adult (business rule violation)
-curl -6 -X POST http://localhost:3000/tickets/purchase \
+curl -X POST http://localhost:3000/tickets/purchase \
   -H "Content-Type: application/json" \
   -d '{"accountId":1,"tickets":[{"type":"CHILD","quantity":2}]}'
 
 # Family with infant (infant free, no seat)
-curl -6 -X POST http://localhost:3000/tickets/purchase \
+curl -X POST http://localhost:3000/tickets/purchase \
   -H "Content-Type: application/json" \
   -d '{"accountId":1,"tickets":[{"type":"ADULT","quantity":2},{"type":"CHILD","quantity":1},{"type":"INFANT","quantity":1}]}'
 ```
@@ -169,7 +176,7 @@ npm run build
 npm test
 ```
 
-### 🐳 Docker Quick Start (Recommended)
+### Docker Quick Start (Recommended)
 
 Get up and running in seconds with Docker:
 
@@ -354,7 +361,7 @@ npm test -- --testNamePattern="validation"
 npm test -- --verbose
 ```
 
-## Professional Implementation Features
+## Implementation Features
 
 This implementation goes beyond the basic exercise requirements to demonstrate production-ready code:
 
@@ -362,7 +369,7 @@ This implementation goes beyond the basic exercise requirements to demonstrate p
 
 - **Single Responsibility**: Each function has one clear purpose with descriptive names
 - **Separation of Concerns**: Controller handles HTTP, Service handles domain logic
-- **Professional Naming**: Self-documenting method names eliminate need for excessive comments
+- **Consistent and Clear Naming**: Self-documenting method names eliminate need for excessive comments
 - **Type Safety**: Comprehensive TypeScript with strict mode throughout
 
 ### Robust Error Handling
@@ -497,26 +504,6 @@ docker-compose --profile docs up swagger-ui
 - **Networks**: Isolated cinema-tickets-network for security
 - **Profiles**: Environment-specific service activation
 
-#### Docker Health Checks
-
-Both Dockerfile and docker-compose include sophisticated health checks:
-
-```bash
-# Container health check (every 30s)
-node -e "fetch('http://127.0.0.1:3000/health').then(r=>r.ok?r.json():Promise.reject()).then(j=>{if(j&&j.status==='OK'){process.exit(0)}else{process.exit(1)}}).catch(()=>process.exit(1))"
-
-# Check container health status
-docker ps  # Shows health status
-docker-compose ps  # Shows service health
-```
-
-### Environment Configuration
-
-| Environment     | Port | Purpose               | Command                           |
-| --------------- | ---- | --------------------- | --------------------------------- |
-| **Production**  | 3000 | Optimized runtime     | `docker-compose up`               |
-| **Development** | 3001 | Hot reload, debugging | `docker-compose --profile dev up` |
-| **Testing**     | -    | CI/CD, validation     | `npm test`                        |
 
 ### TypeScript
 
@@ -559,18 +546,6 @@ npm run build:watch
 - Compiled JavaScript in `dist/` directory
 - Type declarations (`.d.ts` files)
 - Source maps for debugging
-
-## Contributing
-
-### Code Standards
-
-- Follow TypeScript strict mode
-- Use Prettier for formatting
-- Pass all ESLint rules
-- Maintain test coverage above 90%
-- Write descriptive commit messages
-
----
 
 ## Code Quality Metrics
 
