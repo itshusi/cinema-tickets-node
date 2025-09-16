@@ -1,7 +1,7 @@
 {
   "name": "cinema-tickets-node",
   "description": "Cinema ticket booking service with TypeScript implementation following TDD principles",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "engines": {
     "node": ">=22.17.0"
   },
@@ -10,6 +10,7 @@
   "types": "./dist/pairtest/TicketService.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "postbuild": "cp -R src/thirdparty dist/thirdparty && mkdir -p dist/docs && cp docs/openapi.yaml dist/docs/openapi.yaml",
     "build:watch": "tsc -p tsconfig.build.json --watch",
     "test": "jest -c ./jest.config.mjs",
     "test:watch": "jest -c ./jest.config.mjs --watch",
@@ -20,16 +21,25 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "npm run build:watch",
-    "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "pretest": "npm run build",
     "docker:build": "docker build -t cinema-tickets .",
-    "docker:run": "docker run -p 3000:3000 cinema-tickets"
+    "docker:run": "docker run -p 3000:3000 cinema-tickets",
+    "start": "node ./dist/app.js"
+  },
+  "dependencies": {
+    "express": "5.1.0",
+    "js-yaml": "4.1.0",
+    "morgan": "1.10.1",
+    "swagger-ui-express": "5.0.1"
   },
   "devDependencies": {
     "@eslint/js": "9.35.0",
+    "@types/express": "5.0.3",
     "@types/jest": "30.0.0",
-    "@types/node": "22.18.3",
+    "@types/morgan": "1.9.10",
+    "@types/node": "22.18.4",
+    "@types/swagger-ui-express": "4.1.8",
     "@typescript-eslint/eslint-plugin": "8.43.0",
     "@typescript-eslint/parser": "8.43.0",
     "eslint": "9.35.0",
@@ -41,6 +51,7 @@
     "prettier": "3.6.2",
     "ts-jest": "29.4.1",
     "typescript": "5.9.2",
-    "typescript-eslint": "8.43.0"
+    "typescript-eslint": "8.43.0",
+    "yaml": "2.8.1"
   }
 }

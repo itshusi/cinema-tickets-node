@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Cinema Tickets API
   description: REST API for purchasing cinema tickets, documented for the coding exercise. This API documents the TicketService capabilities; a full HTTP server is not required for the exercise.
@@ -20,7 +20,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TicketPurchaseRequest'
+              $ref: "#/components/schemas/TicketPurchaseRequest"
             examples:
               basicPurchase:
                 summary: Adult and child tickets
@@ -32,12 +32,12 @@ paths:
                     - type: CHILD
                       quantity: 1
       responses:
-        '200':
+        "200":
           description: Tickets purchased successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: "#/components/schemas/SuccessResponse"
               examples:
                 success:
                   value:
@@ -53,13 +53,13 @@ paths:
                         - type: CHILD
                           quantity: 1
                           price: 15
-                      timestamp: '2025-09-14T12:00:00.000Z'
-        '400':
+                      timestamp: "2025-09-14T12:00:00.000Z"
+        "400":
           description: Validation error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 invalidAccount:
                   value:
@@ -67,16 +67,17 @@ paths:
                     error:
                       type: VALIDATION_ERROR
                       code: INVALID_ACCOUNT_ID
-                      message: Invalid account ID: -5. Account ID must be a positive integer greater than 0
-                      timestamp: '2025-09-14T12:00:00.000Z'
+                      message: |
+                        Invalid account ID: -5. Account ID must be a positive integer greater than 0
+                      timestamp: "2025-09-14T12:00:00.000Z"
                       details:
                         providedAccountId: -5
-        '402':
+        "402":
           description: Payment required (payment failure)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 paymentDeclined:
                   value:
@@ -84,17 +85,18 @@ paths:
                     error:
                       type: PAYMENT_FAILURE
                       code: PAYMENT_DECLINED
-                      message: Payment processing failed: Insufficient funds
-                      timestamp: '2025-09-14T12:00:00.000Z'
+                      message: |
+                        Payment processing failed: Insufficient funds
+                      timestamp: "2025-09-14T12:00:00.000Z"
                       details:
                         requestedAmount: 50
                         accountId: 12345
-        '409':
+        "409":
           description: Seat reservation conflict
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 noSeats:
                   value:
@@ -102,17 +104,17 @@ paths:
                     error:
                       type: SEAT_RESERVATION_FAILURE
                       code: NO_SEATS_AVAILABLE
-                      message: Seat reservation failed: No seats available for requested showtime
-                      timestamp: '2025-09-14T12:00:00.000Z'
+                      message: "Seat reservation failed: No seats available for requested showtime"
+                      timestamp: "2025-09-14T12:00:00.000Z"
                       details:
                         requestedSeats: 5
                         availableSeats: 2
-        '422':
+        "422":
           description: Business rule violation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 supervisionRequired:
                   value:
@@ -121,17 +123,17 @@ paths:
                       type: BUSINESS_RULE_VIOLATION
                       code: ADULT_SUPERVISION_REQUIRED
                       message: Child and Infant tickets require at least one Adult ticket
-                      timestamp: '2025-09-14T12:00:00.000Z'
+                      timestamp: "2025-09-14T12:00:00.000Z"
                       details:
                         childTickets: 2
                         infantTickets: 1
                         adultTickets: 0
-        '503':
+        "503":
           description: Service unavailable (external dependency outage)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 paymentServiceDown:
                   value:
@@ -140,7 +142,7 @@ paths:
                       type: SERVICE_UNAVAILABLE
                       code: PAYMENT_SERVICE_DOWN
                       message: Payment service is temporarily unavailable
-                      timestamp: '2025-09-14T12:00:00.000Z'
+                      timestamp: "2025-09-14T12:00:00.000Z"
                       details:
                         retryAfterSeconds: 60
 
@@ -154,7 +156,7 @@ components:
       required: [type, quantity]
       properties:
         type:
-          $ref: '#/components/schemas/TicketType'
+          $ref: "#/components/schemas/TicketType"
         quantity:
           type: integer
           minimum: 1
@@ -172,7 +174,7 @@ components:
           minItems: 1
           maxItems: 25
           items:
-            $ref: '#/components/schemas/TicketItem'
+            $ref: "#/components/schemas/TicketItem"
     SuccessResponse:
       type: object
       required: [success, data]
@@ -198,7 +200,7 @@ components:
                 required: [type, quantity, price]
                 properties:
                   type:
-                    $ref: '#/components/schemas/TicketType'
+                    $ref: "#/components/schemas/TicketType"
                   quantity:
                     type: integer
                   price:
@@ -219,14 +221,7 @@ components:
           properties:
             type:
               type: string
-              enum:
-                [
-                  VALIDATION_ERROR,
-                  BUSINESS_RULE_VIOLATION,
-                  PAYMENT_FAILURE,
-                  SEAT_RESERVATION_FAILURE,
-                  SERVICE_UNAVAILABLE,
-                ]
+              enum: [VALIDATION_ERROR, BUSINESS_RULE_VIOLATION, PAYMENT_FAILURE, SEAT_RESERVATION_FAILURE, SERVICE_UNAVAILABLE]
             code:
               type: string
             message:

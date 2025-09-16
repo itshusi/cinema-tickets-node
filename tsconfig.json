@@ -4,15 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "baseUrl": ".",
-    "paths": {
-      "src/*": ["src/*"],
-      "TicketPaymentService": [
-        "src/thirdparty/paymentgateway/TicketPaymentService"
-      ],
-      "SeatReservationService": [
-        "src/thirdparty/seatbooking/SeatReservationService"
-      ]
-    },
+    "paths": { "src/*": ["src/*"]},
     "lib": ["ES2024"],
     "outDir": "./dist",
     "rootDir": "./src",
