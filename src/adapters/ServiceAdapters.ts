@@ -3,11 +3,11 @@ import type { PaymentServiceInstance, PaymentServiceModule, SeatReservationServi
 
 export class PaymentServiceAdapter implements PaymentProcessingService {
   private service: PaymentServiceInstance | null = null;
-  private initialized = false;
+  private initialised = false;
 
   async makePayment(accountId: number, totalAmountToPay: number): Promise<void> {
     try {
-      if (!this.initialized) {
+      if (!this.initialised) {
         const module = (await import("../thirdparty/paymentgateway/TicketPaymentService.js")) as PaymentServiceModule;
         const TicketPaymentServiceImpl = module.default;
 
@@ -16,11 +16,11 @@ export class PaymentServiceAdapter implements PaymentProcessingService {
         }
 
         this.service = new TicketPaymentServiceImpl();
-        this.initialized = true;
+        this.initialised = true;
       }
 
       if (!this.service) {
-        throw new Error("Payment service not properly initialized");
+        throw new Error("Payment service not properly initialised");
       }
 
       this.service.makePayment(accountId, totalAmountToPay);
@@ -33,11 +33,11 @@ export class PaymentServiceAdapter implements PaymentProcessingService {
 
 export class SeatReservationServiceAdapter implements SeatAllocationService {
   private service: SeatReservationServiceInstance | null = null;
-  private initialized = false;
+  private initialised = false;
 
   async reserveSeat(accountId: number, totalSeatsToAllocate: number): Promise<void> {
     try {
-      if (!this.initialized) {
+      if (!this.initialised) {
         const module = (await import("../thirdparty/seatbooking/SeatReservationService.js")) as SeatReservationServiceModule;
         const SeatReservationServiceImpl = module.default;
 
@@ -46,11 +46,11 @@ export class SeatReservationServiceAdapter implements SeatAllocationService {
         }
 
         this.service = new SeatReservationServiceImpl();
-        this.initialized = true;
+        this.initialised = true;
       }
 
       if (!this.service) {
-        throw new Error("Seat reservation service not properly initialized");
+        throw new Error("Seat reservation service not properly initialised");
       }
 
       if (totalSeatsToAllocate <= 0) {

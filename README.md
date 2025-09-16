@@ -4,27 +4,57 @@ A TypeScript implementation of the DWP cinema ticket booking service exercise.
 
 ## Table of Contents
 
-- [Exercise Constraints Maintained](#exercise-constraints-maintained)
-- [Business Rules (Exercise Requirements)](#business-rules-exercise-requirements)
-- [Overview](#overview)
-- [API Endpoints](#api-endpoints)
-- [API Documentation](#api-documentation)
-- [Quick Start](#quick-start)
-  - [Prerequisites](#prerequisites)
-  - [Installation & Setup](#installation--setup)
-  - [Docker Quick Start (Recommended)](#docker-quick-start-recommended)
-  - [Available NPM Commands](#available-npm-commands)
-  - [Development Workflow](#development-workflow)
-- [Project Structure](#project-structure)
-- [Usage Example](#usage-example)
-- [Testing](#testing)
-- [Implementation Features](#implementation-features)
-- [Architecture](#architecture)
-- [Business Logic Flow](#business-logic-flow)
-- [Error Handling](#error-handling)
-- [Docker & Deployment](#docker--deployment)
-- [Build & Deployment](#build--deployment)
-- [Code Quality Metrics](#code-quality-metrics)
+- [Cinema Tickets Booking](#cinema-tickets-booking)
+  - [Table of Contents](#table-of-contents)
+    - [Exercise Constraints Maintained](#exercise-constraints-maintained)
+  - [Business Rules (Exercise Requirements)](#business-rules-exercise-requirements)
+    - [Ticket Types \& Pricing](#ticket-types--pricing)
+    - [Purchase Constraints](#purchase-constraints)
+  - [Overview](#overview)
+  - [API Endpoints](#api-endpoints)
+    - [Core API](#core-api)
+    - [API Response Examples](#api-response-examples)
+  - [API Documentation](#api-documentation)
+    - [Curl Testing Guide](#curl-testing-guide)
+  - [Quick Start](#quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Installation \& Setup](#installation--setup)
+    - [Docker Quick Start (Recommended)](#docker-quick-start-recommended)
+    - [Available NPM Commands](#available-npm-commands)
+    - [Development Workflow](#development-workflow)
+  - [Project Structure](#project-structure)
+  - [Usage Example](#usage-example)
+  - [Testing](#testing)
+    - [Test Coverage Breakdown](#test-coverage-breakdown)
+    - [Test Categories](#test-categories)
+    - [Test Stats](#test-stats)
+    - [Running Specific Tests](#running-specific-tests)
+  - [Implementation Features](#implementation-features)
+    - [Clean Architecture \& Best Practices](#clean-architecture--best-practices)
+    - [Robust Error Handling](#robust-error-handling)
+    - [Comprehensive Testing Strategy](#comprehensive-testing-strategy)
+    - [Production-Ready Deployment](#production-ready-deployment)
+  - [Architecture](#architecture)
+    - [Core Components](#core-components)
+      - [TicketService](#ticketservice)
+      - [TicketTypeRequest](#tickettyperequest)
+      - [InvalidPurchaseException](#invalidpurchaseexception)
+    - [External Integrations](#external-integrations)
+  - [Business Logic Flow](#business-logic-flow)
+  - [Error Handling](#error-handling)
+    - [Validation Errors](#validation-errors)
+    - [Service Failures](#service-failures)
+    - [Example Error Messages](#example-error-messages)
+  - [Docker \& Deployment](#docker--deployment)
+    - [Container Configuration](#container-configuration)
+      - [Docker Compose Services](#docker-compose-services)
+    - [TypeScript](#typescript)
+    - [ESLint](#eslint)
+    - [Jest](#jest)
+  - [Build \& Deployment](#build--deployment)
+    - [Build Process](#build-process)
+    - [Output](#output)
+  - [Code Quality Metrics](#code-quality-metrics)
 
 ### Exercise Constraints Maintained
 
@@ -113,7 +143,7 @@ This application provides a robust ticket booking service that:
 
 ## API Documentation
 
-The API includes comprehensive OpenAPI/Swagger documentation: 
+The API includes comprehensive OpenAPI/Swagger documentation:
 [Published API Docs](http://huseyinarpalikli.com/cinema-tickets-node)
 
 - **Interactive Docs**: <http://localhost:3000/api-docs> (when server is running)
@@ -157,7 +187,7 @@ curl -X POST http://localhost:3000/tickets/purchase \
 
 - **Node.js 22.17.0+** (LTS) - Required for optimal performance
 - **npm 10.x+** or yarn equivalent
-- **Docker** (optional) - For containerized development and deployment
+- **Docker** (optional) - For containerised development and deployment
 
 ### Installation & Setup
 
@@ -195,7 +225,7 @@ docker-compose --profile dev up cinema-tickets-dev
 docker-compose --profile docs up swagger-ui
 ```
 
-The containerized application will be available at:
+The containerised application will be available at:
 
 - **Production**: [http://localhost:3000](http://localhost:3000)
 - **Development**: [http://localhost:3001](http://localhost:3001)
@@ -290,7 +320,7 @@ import TicketTypeRequest from "./src/pairtest/lib/TicketTypeRequest";
 import TicketPaymentService from "./src/thirdparty/paymentgateway/TicketPaymentService";
 import SeatReservationService from "./src/thirdparty/seatbooking/SeatReservationService";
 
-// Initialize external services
+// Initialise external services
 const paymentService = new TicketPaymentService();
 const seatService = new SeatReservationService();
 
@@ -476,7 +506,7 @@ The system handles various error scenarios:
 
 ### Container Configuration
 
-- **Multi-stage build** for optimized production images
+- **Multi-stage build** for optimised production images
 - **Node.js 22 Alpine** base for minimal footprint
 - **Security best practices** with non-root user
 - **Automatic health checks** with API endpoint monitoring
@@ -503,7 +533,6 @@ docker-compose --profile docs up swagger-ui
 - **Health checks**: Automatic container health monitoring with `/health` endpoint
 - **Networks**: Isolated cinema-tickets-network for security
 - **Profiles**: Environment-specific service activation
-
 
 ### TypeScript
 
@@ -554,7 +583,7 @@ npm run build:watch
 - **TypeScript**: Strict mode with comprehensive typing and ESM support
 - **Linting**: Zero ESLint violations with consistent formatting
 - **Architecture**: Clean separation of concerns (domain, API, adapters)
-- **Docker**: Production-ready containerization with health checks
+- **Docker**: Production-ready containerisation with health checks
 - **Error Handling**: Professional HTTP status codes and structured responses
 
 ---

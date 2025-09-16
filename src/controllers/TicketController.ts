@@ -127,7 +127,7 @@ export class TicketController {
     const errorResponse: ErrorResponse = {
       success: false,
       error: {
-        type: this.categorizeErrorType(error.message),
+        type: this.categoriseErrorType(error.message),
         code: this.mapErrorMessageToCode(error.message),
         message: error.message,
         timestamp,
@@ -169,7 +169,7 @@ export class TicketController {
     res.status(500).json(errorResponse);
   }
 
-  private categorizeErrorType(message: string): string {
+  private categoriseErrorType(message: string): string {
     if (message.includes("Invalid account ID") || message.includes("must be")) {
       return "VALIDATION_ERROR";
     }

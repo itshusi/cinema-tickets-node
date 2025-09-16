@@ -1,15 +1,82 @@
 openapi: 3.1.0
 info:
   title: Cinema Tickets API
-  description: REST API for purchasing cinema tickets, documented for the coding exercise. This API documents the TicketService capabilities; a full HTTP server is not required for the exercise.
+  description: Production-ready REST API for purchasing cinema tickets. This implementation extends beyond the basic DWP coding exercise requirements by providing a complete HTTP server with comprehensive endpoints, error handling, and Docker deployment.
   version: 1.0.0
   contact:
-    name: DWP Coding Exercise
+    name: Cinema Tickets Implementation
 servers:
   - url: http://localhost:3000
     description: Local development (placeholder)
 
 paths:
+  /:
+    get:
+      summary: API Information
+      description: Returns basic information about the Cinema Tickets API and available endpoints.
+      operationId: getApiInfo
+      responses:
+        "200":
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Cinema Tickets API"
+                  endpoints:
+                    type: object
+                    properties:
+                      health:
+                        type: string
+                        example: "/health"
+                      tickets:
+                        type: string
+                        example: "/tickets/purchase"
+                      docs:
+                        type: string
+                        example: "/api-docs"
+              example:
+                message: "Cinema Tickets API"
+                endpoints:
+                  health: "/health"
+                  tickets: "/tickets/purchase"
+                  docs: "/api-docs"
+
+  /health:
+    get:
+      summary: Health Check
+      description: Returns the health status of the API service.
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, timestamp, service, version]
+                properties:
+                  status:
+                    type: string
+                    enum: [OK]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  service:
+                    type: string
+                    example: "cinema-tickets-api"
+                  version:
+                    type: string
+                    example: "1.0.0"
+              example:
+                status: "OK"
+                timestamp: "2025-09-16T12:00:00.000Z"
+                service: "cinema-tickets-api"
+                version: "1.0.0"
+
   /tickets/purchase:
     post:
       summary: Purchase cinema tickets
